@@ -1,5 +1,5 @@
 {
-  "name": "ses-sieve",
+  "name": "ses-filter",
   "private": true,
   "version": "0.1.0",
   "type": "module",

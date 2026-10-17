@@ -2,7 +2,7 @@ import { defineConfig } from 'wxt';
 
 export default defineConfig({
   manifest: {
-    name: 'SESふるい',
+    name: 'SESフィルター',
     description: 'エンジニア求人サイトの検索結果で、SES・派遣の求人を理由つきで畳む拡張機能',
     permissions: ['storage'],
   },

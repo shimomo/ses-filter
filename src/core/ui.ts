@@ -6,10 +6,10 @@ export type BarAction = 'reveal' | 'notSes' | 'blockCompany' | 'unblockCompany' 
 export type CounterModel = { hidden: number; flagged: number; pending: number; warnings: string[]; revealAll: boolean };
 type BarButton = { action: BarAction; label: string };
 
-export const STATE_ATTR = 'data-ses-sieve';
-export const BAR_TAG = 'ses-sieve-bar';
-export const COUNTER_TAG = 'ses-sieve-counter';
-export const STYLE_ID = 'ses-sieve-style';
+export const STATE_ATTR = 'data-ses-filter';
+export const BAR_TAG = 'ses-filter-bar';
+export const COUNTER_TAG = 'ses-filter-counter';
+export const STYLE_ID = 'ses-filter-style';
 
 const CATEGORY_LABELS: Record<Category, string> = { ses: 'SES', haken: '派遣' };
 

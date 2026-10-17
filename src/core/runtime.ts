@@ -257,7 +257,7 @@ export class Runtime {
       const recognized = [...this.cards.values()].filter((entry) => entry.data !== null).length;
       if (total === 0 || recognized / total < 0.5) {
         this.warnings.add(WARN_UNRECOGNIZED);
-        console.warn('[ses-sieve] cards not recognized', { site: this.adapter.site, url, total, recognized });
+        console.warn('[ses-filter] cards not recognized', { site: this.adapter.site, url, total, recognized });
         this.render();
       }
     }, this.healthCheckMs);
@@ -267,7 +267,7 @@ export class Runtime {
     try {
       return { data: this.adapter.extract(element) };
     } catch (error) {
-      console.warn('[ses-sieve] failed to read a card', error);
+      console.warn('[ses-filter] failed to read a card', error);
       return { data: null };
     }
   }
@@ -298,7 +298,7 @@ export class Runtime {
       for (const [id, record] of jobs) this.jobs.set(id, record);
       for (const [key, record] of companies) this.companies.set(key, record);
     } catch (error) {
-      console.warn('[ses-sieve] failed to read saved judgements', error);
+      console.warn('[ses-filter] failed to read saved judgements', error);
     }
   }
 
@@ -311,7 +311,7 @@ export class Runtime {
     try {
       this.companies.set(card.companyKey, await saveBusinessHit(this.adapter.site, card.companyKey, card.companyName, result.category, now));
     } catch (error) {
-      console.warn('[ses-sieve] failed to save a company record; keeping it in memory', error);
+      console.warn('[ses-filter] failed to save a company record; keeping it in memory', error);
       const previous = this.companies.get(card.companyKey) ?? emptyCompany(card.companyName, now);
       this.companies.set(card.companyKey, { ...previous, businessHit: result.category, updatedAt: now });
     }
@@ -331,7 +331,7 @@ export class Runtime {
     try {
       this.companies.set(card.companyKey, await saveCardHit(this.adapter.site, card.companyKey, card.companyName, card.jobId, category, now));
     } catch (error) {
-      console.warn('[ses-sieve] failed to save a company record; keeping it in memory', error);
+      console.warn('[ses-filter] failed to save a company record; keeping it in memory', error);
       const previous = this.companies.get(card.companyKey) ?? emptyCompany(card.companyName, now);
       this.companies.set(card.companyKey, withJobResult(previous, card.jobId, category ? 'hide' : 'unknown', category ?? undefined, now));
     }
@@ -364,7 +364,7 @@ export class Runtime {
         }
       } catch (error) {
         // 1枚の失敗で残りのカードを止めない。失敗したカードは隠さず、認識できなかったカードとして数える
-        console.warn('[ses-sieve] failed to show a card', error);
+        console.warn('[ses-filter] failed to show a card', error);
         clearCard(element);
         entry.data = null;
         entry.verdict = undefined;
@@ -428,7 +428,7 @@ export class Runtime {
     try {
       this.lists = await updateLists(op, this.now());
     } catch (error) {
-      console.warn('[ses-sieve] failed to save your choice; keeping it for this page', error);
+      console.warn('[ses-filter] failed to save your choice; keeping it for this page', error);
       this.lists = applyListOp(this.lists, op, this.now());
     }
     this.render();
@@ -459,7 +459,7 @@ export class Runtime {
     try {
       parsed = detail.parse(new DOMParser().parseFromString(html, 'text/html'), task.jobId);
     } catch (error) {
-      console.warn('[ses-sieve] failed to read a fetched detail page', error);
+      console.warn('[ses-filter] failed to read a fetched detail page', error);
       parsed = { jobId: task.jobId, devContentsTypes: null, fields: { text: '' } };
     }
     await this.saveDetail(parsed, this.cardDataFor(task.jobId));
@@ -492,7 +492,7 @@ export class Runtime {
         now,
       }));
     } catch (error) {
-      console.warn('[ses-sieve] failed to save a judgement; keeping it in memory', error);
+      console.warn('[ses-filter] failed to save a judgement; keeping it in memory', error);
       job = makeJobRecord(judgement.level, judgement.category, judgement.reasons, now);
       company = withJobResult(this.companies.get(companyKey) ?? emptyCompany(companyName, now), detail.jobId, judgement.level, judgement.category, now);
     }
@@ -509,7 +509,7 @@ export class Runtime {
     try {
       await this.saveDetail(detail.parse(this.doc, jobId));
     } catch (error) {
-      console.warn('[ses-sieve] failed to read this detail page', error);
+      console.warn('[ses-filter] failed to read this detail page', error);
     }
   }
 

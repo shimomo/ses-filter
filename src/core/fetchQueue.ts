@@ -89,7 +89,7 @@ export class FetchQueue {
           try {
             await this.options.onResult(task, html);
           } catch (error) {
-            console.warn('[ses-sieve] failed to handle a fetched page', error);
+            console.warn('[ses-filter] failed to handle a fetched page', error);
           }
         }
         if (this.tasks.length > 0 && !this.stoppedFlag) await this.sleep(this.options.intervalMs);

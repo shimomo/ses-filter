@@ -1,4 +1,4 @@
-# SESふるい（ses-sieve）
+# SESフィルター（ses-filter）
 
 エンジニア求人サイトの検索結果で、SES・派遣の求人を理由つきで畳む Chrome 拡張機能です。対応サイトは paiza転職、Green、doda です。
 

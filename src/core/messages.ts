@@ -1,6 +1,6 @@
 import type { Site } from './types';
 
-export const STATS_MESSAGE = 'ses-sieve:stats';
+export const STATS_MESSAGE = 'ses-filter:stats';
 
 export type PageStats = {
   site: Site;

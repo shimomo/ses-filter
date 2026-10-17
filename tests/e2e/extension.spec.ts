@@ -21,11 +21,11 @@ test('paiza: cards whose detail page says 受託開発（社外常駐） get col
   );
   const page = await context.newPage();
   await page.goto('https://paiza.jp/career/job_offers');
-  await expect(page.locator('[data-ses-sieve]').first()).toBeAttached();
-  expect(await page.locator('[data-ses-sieve]').count()).toBeGreaterThanOrEqual(10);
-  const first = page.locator('[data-ses-sieve="collapsed"]').first();
+  await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
+  expect(await page.locator('[data-ses-filter]').count()).toBeGreaterThanOrEqual(10);
+  const first = page.locator('[data-ses-filter="collapsed"]').first();
   await expect(first).toBeAttached({ timeout: 20_000 });
-  await expect(first.locator('ses-sieve-bar .text')).toContainText('受託開発（社外常駐）');
+  await expect(first.locator('ses-filter-bar .text')).toContainText('受託開発（社外常駐）');
   expect(detailRequests.length).toBeGreaterThan(0);
 });
 
@@ -43,11 +43,11 @@ test('green: an SES company is collapsed, and another company can be hidden from
   await page.goto('https://www.green-japan.com/search');
   const ses = page.locator('div:has(> a[href="/company/101/job/1001"])');
   const clean = page.locator('div:has(> a[href="/company/102/job/2001"])');
-  await expect(ses).toHaveAttribute('data-ses-sieve', 'collapsed');
-  await expect(clean).toHaveAttribute('data-ses-sieve', 'plain');
-  await clean.locator('ses-sieve-bar button[data-action="blockCompany"]').click();
-  await expect(clean).toHaveAttribute('data-ses-sieve', 'collapsed');
-  await expect(clean.locator('ses-sieve-bar .text')).toHaveText('あなたが隠した企業');
+  await expect(ses).toHaveAttribute('data-ses-filter', 'collapsed');
+  await expect(clean).toHaveAttribute('data-ses-filter', 'plain');
+  await clean.locator('ses-filter-bar button[data-action="blockCompany"]').click();
+  await expect(clean).toHaveAttribute('data-ses-filter', 'collapsed');
+  await expect(clean.locator('ses-filter-bar .text')).toHaveText('あなたが隠した企業');
 });
 
 test('green: the captured search page is recognized without warnings', async ({ context }) => {
@@ -56,10 +56,10 @@ test('green: the captured search page is recognized without warnings', async ({ 
   await serve(context, [{ match: (u) => u.hostname === 'www.green-japan.com' && u.pathname === '/search', html: search ?? '' }]);
   const page = await context.newPage();
   await page.goto('https://www.green-japan.com/search');
-  await expect(page.locator('[data-ses-sieve]').first()).toBeAttached();
-  expect(await page.locator('[data-ses-sieve]').count()).toBeGreaterThanOrEqual(10);
+  await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
+  expect(await page.locator('[data-ses-filter]').count()).toBeGreaterThanOrEqual(10);
   await page.waitForTimeout(6_000);
-  await expect(page.locator('ses-sieve-counter .warning')).toHaveCount(0);
+  await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
 });
 
 test('doda: a card whose 事業 says SES is collapsed', async ({ context }) => {
@@ -74,8 +74,8 @@ test('doda: a card whose 事業 says SES is collapsed', async ({ context }) => {
   ]);
   const page = await context.newPage();
   await page.goto('https://doda.jp/DodaFront/View/JobSearchList/j_k__/Java/');
-  await expect(page.locator('article').nth(0)).toHaveAttribute('data-ses-sieve', 'collapsed');
-  await expect(page.locator('article').nth(1)).toHaveAttribute('data-ses-sieve', 'plain');
+  await expect(page.locator('article').nth(0)).toHaveAttribute('data-ses-filter', 'collapsed');
+  await expect(page.locator('article').nth(1)).toHaveAttribute('data-ses-filter', 'plain');
 });
 
 test('doda: the captured list page is recognized without warnings', async ({ context }) => {
@@ -84,8 +84,8 @@ test('doda: the captured list page is recognized without warnings', async ({ con
   await serve(context, [{ match: (u) => u.hostname === 'doda.jp' && u.pathname.startsWith('/DodaFront/View/JobSearchList'), html: list ?? '' }]);
   const page = await context.newPage();
   await page.goto('https://doda.jp/DodaFront/View/JobSearchList/j_k__/Java/');
-  await expect(page.locator('[data-ses-sieve]').first()).toBeAttached();
-  expect(await page.locator('[data-ses-sieve]').count()).toBeGreaterThanOrEqual(10);
+  await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
+  expect(await page.locator('[data-ses-filter]').count()).toBeGreaterThanOrEqual(10);
   await page.waitForTimeout(6_000);
-  await expect(page.locator('ses-sieve-counter .warning')).toHaveCount(0);
+  await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
 });

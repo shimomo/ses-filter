@@ -3,7 +3,7 @@
  * ログアウト中の paiza のページにも「ログアウト」の文字があるので、その語は使わない
  */
 export const PAGE_PROBLEMS: ReadonlyArray<{ pattern: RegExp; label: string }> = [
-  { pattern: /data-ses-sieve|<ses-sieve-/, label: '拡張機能の印（data-ses-sieve、ses-sieve-*）' },
+  { pattern: /data-ses-(?:filter|sieve)|<ses-(?:filter|sieve)-/, label: '拡張機能の印（data-ses-filter、ses-filter-*、古い版の data-ses-sieve、ses-sieve-*）' },
   { pattern: /header_userNameWrapper/, label: 'ログイン中の名前の欄' },
   { pattern: /登録情報設定/, label: 'ログイン中のメニュー（登録情報設定）' },
   { pattern: /閲覧済/, label: '閲覧済みの印' },
