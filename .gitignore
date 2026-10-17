@@ -1,0 +1,14 @@
+node_modules/
+.output/
+.wxt/
+test-results/
+playwright-report/
+eval/.work/
+
+# 保存したページ・ラベル・評価の報告は、サイトの内容と企業ごとの判断を含むので載せない
+tests/fixtures/
+eval/pages/
+eval/labels/
+eval/holdout/
+eval/report.md
+eval/review.md

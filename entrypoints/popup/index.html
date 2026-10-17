@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <title>SESふるい</title>
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <h1>SESふるい</h1>
+    <label class="row"><input type="checkbox" id="enabled" /> 有効にする</label>
+    <fieldset>
+      <legend>表示モード</legend>
+      <label><input type="radio" name="mode" value="collapse" /> 畳む</label>
+      <label><input type="radio" name="mode" value="hide" /> 消す</label>
+      <label><input type="radio" name="mode" value="dim" /> 薄く</label>
+    </fieldset>
+    <fieldset>
+      <legend>サイト</legend>
+      <label><input type="checkbox" data-site="paiza" /> paiza</label>
+      <label><input type="checkbox" data-site="green" /> Green</label>
+      <label><input type="checkbox" data-site="doda" /> doda</label>
+    </fieldset>
+    <label class="row"><input type="checkbox" id="paizaPrefetch" /> paiza の詳細ページを先読みする</label>
+    <section>
+      <h2>このページ</h2>
+      <div id="stats-body">読み込み中…</div>
+    </section>
+    <button type="button" id="clear-cache">保存済みの判定を消去</button>
+    <p id="status" role="status"></p>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,9 @@
+body { width: 320px; margin: 0; padding: 12px; font: 13px/1.5 system-ui, sans-serif; color: #1f2328; }
+h1 { margin: 0 0 8px; font-size: 15px; }
+h2 { margin: 12px 0 4px; font-size: 13px; }
+fieldset { margin: 8px 0; padding: 6px 8px; border: 1px solid #d0d7de; border-radius: 6px; }
+label { display: inline-flex; align-items: center; gap: 4px; margin-right: 8px; }
+.row { display: flex; margin: 6px 0; }
+#stats-body p { margin: 2px 0; }
+button { margin-top: 8px; }
+#status { min-height: 1.5em; color: #57606a; }
