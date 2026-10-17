@@ -1,6 +1,6 @@
 # SESフィルター（ses-filter）
 
-エンジニア求人サイトの検索結果で、SES・派遣の求人を理由つきで畳む Chrome 拡張機能です。対応サイトは paiza転職、Green、doda です。
+エンジニア求人サイトの検索結果で、SES・派遣の求人を理由つきで畳む Chrome 拡張機能です。対応サイトは paiza転職、Green、doda です。今後、対応サイトを増やしていく予定です。
 
 ![合成のページで、SES と派遣の求人が理由つきで畳まれ、要確認の求人に印が付いている画面](docs/images/screenshot.png)
 
