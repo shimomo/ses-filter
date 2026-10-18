@@ -85,4 +85,4 @@ pnpm test:e2e                           # 拡張機能を読み込んだ E2E テ
 
 ## ライセンス
 
-MIT（[LICENSE](LICENSE)）
+SESフィルターは [MIT license](LICENSE) の元で公開されています。
