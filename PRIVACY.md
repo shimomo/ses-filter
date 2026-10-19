@@ -16,6 +16,7 @@ SES フィルター（ses-filter）が扱うデータについて説明します
 - Green（`https://www.green-japan.com/`）
 - doda（`https://doda.jp/`）
 - マイナビ転職（`https://tenshoku.mynavi.jp/`）
+- リクナビNEXT（`https://next.rikunabi.com/`）
 
 これらのページで、検索結果のカードの文字（求人のタイトル、企業名、勤務地、事業内容、本文など）と、自分で開いた求人の詳細ページの内容を読み、SES・派遣の求人かどうかを判定します。ほかのサイトのページは読みません。
 

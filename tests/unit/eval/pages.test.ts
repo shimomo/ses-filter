@@ -143,5 +143,6 @@ describe('pageFiles and loadSite', () => {
     expect(jobUrl('green', { jobId: '1', companyKey: '2' })).toBe('https://www.green-japan.com/company/2/job/1');
     expect(jobUrl('doda', { jobId: '1', companyKey: 'x' })).toBe('https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__1/');
     expect(jobUrl('mynavi', { jobId: '100-1-2-1', companyKey: '100' })).toBe('https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/');
+    expect(jobUrl('rikunabi', { jobId: 'jk0000000000000001', companyKey: 'x' })).toBe('https://next.rikunabi.com/viewjob/jk0000000000000001/');
   });
 });

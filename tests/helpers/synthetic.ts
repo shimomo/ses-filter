@@ -218,3 +218,41 @@ ${section('会社情報', `<table class="jobOfferTable"><tbody>${companyRows}</t
 ${recommended}
 </body></html>`;
 }
+
+export type RikunabiCardOptions = {
+  jobId: string;
+  company: string;
+  title: string;
+  /** 雇用形態のタグ（「正社員」「業務委託」「派遣社員」など） */
+  employment?: string;
+  catchCopy?: string;
+  location?: string;
+  requirement?: string;
+  /** 特徴のタグ（「交通費支給」など）。実ページではカードの中の li になる */
+  features?: string[];
+  /** 会社ページへのリンク（/company/<番号>/）。実ページでは半分ほどのカードにしかない */
+  companyId?: string;
+  /** カード全体を覆う透明なリンクに、実ページと同じく position:absolute を付ける */
+  coverLink?: boolean;
+};
+
+/** リクナビNEXTの検索結果のカード。2026-10-20 に確認した実ページ（/job_search/oc-technology/）の構造を、判定に必要な部分だけ残して再現する。クラス名の末尾はビルドごとに変わるので、実物と違う架空の文字列にしてある */
+export function rikunabiCard(o: RikunabiCardOptions): string {
+  const name = `<span class="styles_bodyText__Aa11B styles_employerNameBase__Kl90M">${o.company}</span>`;
+  const features = o.features === undefined ? '' : `<ul class="styles_featureTags__Pp33Q">${o.features.map((f) => `<li>${f}</li>`).join('')}</ul>`;
+  const cover = o.coverLink ? ' style="position:absolute;inset:0;z-index:1"' : '';
+  return `<li><div><div class="styles_bigCard__Ab12C styles_pcBigCard__De34F" style="position:relative"><a target="_blank" class="styles_link__Gh56I" href="/viewjob/${o.jobId}/"${cover}></a>
+  <div class="styles_detailArea__Rr44S"><div class="styles_cardHead__Ss55T"><div class="styles_cardTags__Tt66U"><div class="styles_empTagsContainer__Uu77V"><span class="styles_captionText__Xy12Z styles_empTag__Qw34E">${o.employment ?? '正社員'}</span></div></div>
+  <div class="styles_titleWrapper__Vv88W"><h2 class="styles_heading__Hj78K styles_title__Ww99X">${o.title}</h2>${o.companyId === undefined ? name : `<a class="styles_employerLink__Yy00Z" href="/company/${o.companyId}/">${name}</a>`}</div></div>
+  <div class="styles_titlePRArea__Zz12A"><p class="styles_bodyText__Aa11B">${o.catchCopy ?? '自社サービスの開発メンバーを募集'}</p></div>
+  <div class="styles_cardInfo__Bb23C">${o.location === undefined ? '' : `<p data-content="location" class="styles_cardInfoText__Cc34D">${o.location}</p>`}<p data-content="salary" class="styles_cardInfoText__Cc34D">月給25万円～</p><p data-content="qualification" class="styles_cardInfoText__Cc34D">${o.requirement ?? '求める人材: 実務経験1年以上'}</p></div>
+  ${features}</div>
+  <div class="styles_ctaArea__Dd45E"><button data-testid="favorite-btn" aria-label="気になる 追加する">気になる</button></div></div></div></li>`;
+}
+
+/** 検索結果の一覧の間に挟まる、絞り込みの案内（求人へのリンクはない） */
+export const rikunabiFilterPrompt = (): string =>
+  `<li><div class="styles_titleTaskCard__Zz11A">雇用形態を設定して求人を絞り込みましょう<a href="/job_search/oc-technology/?tagOcs=110#">正社員</a><a href="/job_search/oc-technology/?tagOcs=110#">派遣社員</a></div></li>`;
+
+export const rikunabiListPage = (items: string[]): string =>
+  `<!doctype html><html lang="ja"><head><title>ITの転職・求人情報｜リクナビNEXTで転職</title></head><body><main><ul class="styles_module__Mm22N">${items.join('\n')}</ul></main></body></html>`;

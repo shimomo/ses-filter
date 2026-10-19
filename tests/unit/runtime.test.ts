@@ -134,7 +134,7 @@ describe('Runtime on Green', () => {
   });
 
   it('leaves the page untouched when the site is turned off', async () => {
-    await saveSettings({ sites: { paiza: true, green: false, doda: true, mynavi: true } });
+    await saveSettings({ sites: { paiza: true, green: false, doda: true, mynavi: true, rikunabi: true } });
     document.body.innerHTML = greenCard(SES_GREEN);
     await start({ adapter: greenAdapter });
     expect(stateOf(greenCardElement('1001'))).toBeNull();

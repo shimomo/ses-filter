@@ -5,13 +5,14 @@ import type { CardData, DetailData, Site, SiteAdapter } from '../../src/core/typ
 import { dodaAdapter } from '../../src/sites/doda';
 import { greenAdapter } from '../../src/sites/green';
 import { mynaviAdapter } from '../../src/sites/mynavi';
+import { rikunabiAdapter } from '../../src/sites/rikunabi';
 import { paizaAdapter } from '../../src/sites/paiza';
 import { readLabels } from './labels';
 import { TUNING, type EvalSet } from './sets';
 import type { EvalCard, SiteData } from './types';
 
-export const SITES: readonly Site[] = ['paiza', 'green', 'doda', 'mynavi'];
-export const ADAPTERS: Record<Site, SiteAdapter> = { paiza: paizaAdapter, green: greenAdapter, doda: dodaAdapter, mynavi: mynaviAdapter };
+export const SITES: readonly Site[] = ['paiza', 'green', 'doda', 'mynavi', 'rikunabi'];
+export const ADAPTERS: Record<Site, SiteAdapter> = { paiza: paizaAdapter, green: greenAdapter, doda: dodaAdapter, mynavi: mynaviAdapter, rikunabi: rikunabiAdapter };
 
 /** 詳細ページのファイル名（…-detail-<求人ID>.html）。マイナビ転職の求人IDはハイフンを含む（<企業ID>-<n>-<m>-<k>） */
 const DETAIL_FILE = /-detail(?:-(\d+(?:-\d+)*))?\.html$/;
@@ -47,6 +48,8 @@ export function jobUrl(site: Site, card: { jobId: string; companyKey: string }):
       return `https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__${card.jobId}/`;
     case 'mynavi':
       return `https://tenshoku.mynavi.jp/jobinfo-${card.jobId}/`;
+    case 'rikunabi':
+      return `https://next.rikunabi.com/viewjob/${card.jobId}/`;
   }
 }
 

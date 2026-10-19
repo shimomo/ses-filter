@@ -31,6 +31,12 @@ describe('judgeFields hides strong signals', () => {
     ['on-site job before a career-change line', f({ text: 'インフラエンジニア（客先常駐）／未経験からの転職歓迎' }), 'ses', 'ses-kyakusaki'],
     ['hedged no on-site projects', f({ location: '東京都港区（常駐案件は基本的にありません）' }), 'ses', 'ses-location-anken'],
     ['return rate next to a highlights label', f({ text: '【この求人のポイント】還元率80%・案件選択制' }), 'ses', 'ses-kangen'],
+    ['freelance start date to be discussed', f({ text: 'エンジニア募集/稼働時期応相談/フリーランス歓迎' }), 'ses', 'ses-agent-kadou'],
+    ['high-paying projects', f({ text: '上流案件、高単価案件多数！経験者歓迎' }), 'ses', 'ses-agent-tanka'],
+    ['high pay through a direct contract chain', f({ text: '案件は直商流で高単価です' }), 'ses', 'ses-agent-tanka'],
+    ['high pay in brackets', f({ text: '【高単価】クラウド移行のエンジニアを募集' }), 'ses', 'ses-agent-tanka'],
+    ['no waiting between projects', f({ text: '待機は基本0です' }), 'ses', 'ses-agent-taiki'],
+    ['zero waiting period', f({ text: '待機期間ゼロを目指します' }), 'ses', 'ses-agent-taiki'],
   ])('%s', (_name, fields, category, ruleId) => {
     const result = judgeFields(fields, 'card-rule');
     expect(result.level).toBe('hide');
@@ -57,7 +63,17 @@ describe('judgeFields flags medium-only signals', () => {
 describe('judgeFields ignores negations and look-alikes', () => {
   it.each<[string, CardFields]>([
     ['negated 客先常駐', f({ text: '100％自社内開発（客先常駐は一切ありません）' })],
+    ['in-house contract that says 在宅案件', f({ text: '【在宅案件】自社のオンライン講座の教材を編集する方を募集' })],
+    ['system uptime', f({ text: 'システムの稼働状況を監視し、稼働開始後の運用を担当' })],
+    ['high-priced products in sales', f({ text: '高単価商材を扱う法人営業／インセンティブあり' })],
+    ['high-priced goods with な', f({ text: '高単価な商材を扱う営業' })],
+    ['high-priced service with な', f({ text: '高単価なサービスを提供する自社の営業' })],
+    ['high-price customer tier', f({ text: '高単価帯の顧客向けSaaSを開発' })],
+    ['system go-live date', f({ text: '新基幹システムの稼働時期は2027年4月予定' })],
+    ['on-call waiting cut to zero', f({ text: 'オンコール待機ゼロを目指す運用の自動化' })],
+    ['no on-call duty', f({ text: '社内システムの運用保守（オンコール待機なし）' })],
     ['客先常駐なし', f({ text: '客先常駐なし' })],
+    ['客先常駐ナシ in katakana', f({ title: '社内ツールの開発担当(客先常駐ナシ)' })],
     ['enumerated negation', f({ text: '客先常駐・SESなし' })],
     ['Amazon SES in a tech stack', f({ text: 'AWS（ECS (Fargate)、Aurora (PostgreSQL)、S3、SES、CFn）' })],
     ['Amazon SES in business', f({ business: 'Amazon SESを使ったメール配信基盤の開発' })],

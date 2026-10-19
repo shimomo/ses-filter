@@ -50,11 +50,11 @@ describe('settings', () => {
 
   it('fills sites missing from a partially saved object', async () => {
     await browser.storage.local.set({ settings: { mode: 'dim', sites: { green: false } } });
-    expect((await loadSettings()).sites).toEqual({ paiza: true, green: false, doda: true, mynavi: true });
+    expect((await loadSettings()).sites).toEqual({ paiza: true, green: false, doda: true, mynavi: true, rikunabi: true });
   });
 
   it('turns mynavi on for settings saved before it existed', () => {
-    expect(mergeSettings({ sites: { paiza: false, green: true, doda: true } }).sites).toEqual({ paiza: false, green: true, doda: true, mynavi: true });
+    expect(mergeSettings({ sites: { paiza: false, green: true, doda: true } }).sites).toEqual({ paiza: false, green: true, doda: true, mynavi: true, rikunabi: true });
   });
 });
 

@@ -1,4 +1,4 @@
-import { dodaCard, dodaListPage, greenCard, greenListPage, mynaviCard, mynaviDetailPage, mynaviListPage, paizaDetailPage } from '../helpers/synthetic';
+import { dodaCard, dodaListPage, greenCard, greenListPage, mynaviCard, mynaviDetailPage, mynaviListPage, paizaDetailPage, rikunabiCard, rikunabiFilterPrompt, rikunabiListPage } from '../helpers/synthetic';
 import { PREFETCH_AVAILABLE } from '../../src/core/features';
 import { enablePrefetch, expect, extensionId, fixtureHtml, serve, test } from './fixtures';
 
@@ -152,6 +152,55 @@ test('mynavi: the captured list page is recognized without warnings', async ({ c
   await page.goto(MYNAVI_LIST);
   await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
   expect(await page.locator('[data-ses-filter]').count()).toBe(50);
+  await page.waitForTimeout(6_000);
+  await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
+});
+
+const RIKUNABI_LIST = 'https://next.rikunabi.com/job_search/oc-technology/?tagOcs=110';
+const rikunabiListRoute = (html: string) => ({ match: (u: URL) => u.hostname === 'next.rikunabi.com' && u.pathname === '/job_search/oc-technology/', html });
+
+test('rikunabi: a 派遣社員 card is collapsed, and its bar can show it', async ({ context }) => {
+  await serve(context, [
+    rikunabiListRoute(
+      rikunabiListPage([
+        rikunabiFilterPrompt(),
+        rikunabiCard({ jobId: 'jk0000000000000001', company: '株式会社サンプル', title: '組込みエンジニア', employment: '派遣社員' }),
+        rikunabiCard({ jobId: 'jk0000000000000002', company: '株式会社見本', title: '社内SE', employment: '正社員', features: ['交通費支給'] }),
+      ]),
+    ),
+  ]);
+  const page = await context.newPage();
+  await page.goto(RIKUNABI_LIST);
+  const cards = page.locator('[data-ses-filter]');
+  await expect(cards).toHaveCount(2);
+  const haken = cards.nth(0);
+  await expect(haken).toHaveAttribute('data-ses-filter', 'collapsed');
+  await expect(haken.locator('ses-filter-bar .text')).toContainText('派遣');
+  await expect(cards.nth(1)).toHaveAttribute('data-ses-filter', 'plain');
+  await haken.locator('ses-filter-bar button[data-action="reveal"]').click();
+  await expect(haken).toHaveAttribute('data-ses-filter', 'revealed');
+});
+
+test("rikunabi: the bar's 表示 button is clickable above the card's cover link", async ({ context }) => {
+  await serve(context, [
+    rikunabiListRoute(rikunabiListPage([rikunabiCard({ jobId: 'jk0000000000000001', company: '株式会社サンプル', title: '組込みエンジニア', employment: '派遣社員', coverLink: true })])),
+  ]);
+  const page = await context.newPage();
+  await page.goto(RIKUNABI_LIST);
+  const card = page.locator('[data-ses-filter]').first();
+  await expect(card).toHaveAttribute('data-ses-filter', 'collapsed');
+  await card.locator('ses-filter-bar button[data-action="reveal"]').click({ timeout: 5_000 });
+  await expect(card).toHaveAttribute('data-ses-filter', 'revealed');
+});
+
+test('rikunabi: the captured list page is recognized without warnings', async ({ context }) => {
+  const list = fixtureHtml('rikunabi', 'list');
+  test.skip(list === null, 'tests/fixtures/rikunabi/*-list.html がない');
+  await serve(context, [rikunabiListRoute(list ?? '')]);
+  const page = await context.newPage();
+  await page.goto(RIKUNABI_LIST);
+  await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
+  expect(await page.locator('[data-ses-filter]').count()).toBe(102);
   await page.waitForTimeout(6_000);
   await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
 });

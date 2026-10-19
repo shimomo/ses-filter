@@ -10,7 +10,7 @@ export const LISTS_KEY = 'userLists';
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   mode: 'collapse',
-  sites: { paiza: true, green: true, doda: true, mynavi: true },
+  sites: { paiza: true, green: true, doda: true, mynavi: true, rikunabi: true },
   prefetch: false,
   fetchIntervalMs: 1000,
 };

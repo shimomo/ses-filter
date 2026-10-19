@@ -38,6 +38,7 @@ describe('captured fixtures', () => {
     ['green', 'search'],
     ['mynavi', 'list'],
     ['mynavi', 'detail'],
+    ['rikunabi', 'list'],
   ] as const) {
     it.skipIf(!hasFixture(site, name))(`${site} ${name} contains no script elements`, () => {
       expect(loadFixture(site, name).querySelectorAll('script')).toHaveLength(0);

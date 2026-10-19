@@ -1,4 +1,4 @@
-export type Site = 'paiza' | 'green' | 'doda' | 'mynavi';
+export type Site = 'paiza' | 'green' | 'doda' | 'mynavi' | 'rikunabi';
 export type Category = 'ses' | 'haken';
 export type FieldName = 'title' | 'location' | 'business' | 'workHours' | 'text';
 
