@@ -1,4 +1,4 @@
-export type Site = 'paiza' | 'green' | 'doda';
+export type Site = 'paiza' | 'green' | 'doda' | 'mynavi';
 export type Category = 'ses' | 'haken';
 export type FieldName = 'title' | 'location' | 'business' | 'workHours' | 'text';
 
@@ -24,8 +24,11 @@ export type DetailData = {
   jobId: string;
   companyKey?: string;
   companyName?: string;
-  /** paiza の開発内容タイプ。見出しが見つからなければ null */
-  devContentsTypes: string[] | null;
+  /**
+   * サイト自身の分類（paiza の開発内容タイプ）。
+   * string[] = 読めた。null = 分類があるはずのサイトで読めなかった（不明）。undefined = 分類のないサイト（マイナビ転職。ルールで判定する）
+   */
+  devContentsTypes?: string[] | null;
   employment?: string;
   fields: CardFields;
 };
@@ -37,6 +40,8 @@ export interface SiteAdapter {
   extract(card: Element): CardData | null;
   detail?: {
     isDetailPage(url: URL): boolean;
+    /** 開いた詳細ページの URL から求人IDを読む。記録しないページ（マイナビ転職の広告型など）は null */
+    jobIdOf(url: URL): string | null;
     url(card: CardData): string | null;
     parse(doc: Document, jobId: string): DetailData;
   };
@@ -67,7 +72,8 @@ export type Settings = {
   enabled: boolean;
   mode: DisplayMode;
   sites: Record<Site, boolean>;
-  paizaPrefetch: boolean;
+  /** 詳細ページの先読み。先読みのあるサイト（paiza、マイナビ転職）すべてに効く。保存済みの古い `paizaPrefetch` は読み替える */
+  prefetch: boolean;
   fetchIntervalMs: number;
 };
 

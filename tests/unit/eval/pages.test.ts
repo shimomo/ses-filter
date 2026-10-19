@@ -2,7 +2,7 @@ import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { buildSiteData, countedOnly, detailJobId, jobUrl, loadSite, pageFiles } from '../../../eval/lib/pages';
+import { ADAPTERS, SITES, buildSiteData, countedOnly, detailJobId, jobUrl, loadSite, pageFiles } from '../../../eval/lib/pages';
 import { greenCard, greenListPage, paizaCard, paizaDetailPage, paizaListPage, parseHtml } from '../../helpers/synthetic';
 import { HOLDOUT } from '../../../eval/lib/sets';
 
@@ -60,6 +60,13 @@ describe('buildSiteData', () => {
   });
 });
 
+describe('SITES', () => {
+  it('evaluates mynavi with its adapter', () => {
+    expect(SITES).toContain('mynavi');
+    expect(ADAPTERS.mynavi?.site).toBe('mynavi');
+  });
+});
+
 describe('detailJobId', () => {
   it('reads the job ID from the file name first, then from the canonical link', () => {
     expect(detailJobId('eval/pages/paiza/2026-10-17-detail-5002.html', parseHtml('<html></html>'))).toBe('5002');
@@ -68,6 +75,12 @@ describe('detailJobId', () => {
     const green = parseHtml('<html><head><link rel="canonical" href="https://www.green-japan.com/company/1/job/99"></head></html>');
     expect(detailJobId('x-detail.html', green)).toBe('99');
     expect(detailJobId('x-detail.html', parseHtml('<html></html>'))).toBeNull();
+  });
+
+  it('reads a hyphenated mynavi job id from the file name and from the canonical link', () => {
+    expect(detailJobId('eval/pages/mynavi/2026-10-18-detail-100-1-2-1.html', parseHtml('<html></html>'))).toBe('100-1-2-1');
+    const mynavi = parseHtml('<html><head><link rel="canonical" href="https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/"></head></html>');
+    expect(detailJobId('tests/fixtures/mynavi/2026-10-18-detail.html', mynavi)).toBe('100-1-2-1');
   });
 });
 
@@ -80,6 +93,8 @@ describe('pageFiles and loadSite', () => {
       ['eval/pages/paiza', '2026-10-17-list-3.html'],
       ['eval/pages/paiza', '2026-10-17-list-2.html'],
       ['eval/pages/paiza', '2026-10-17-detail-5.html'],
+      ['eval/pages/mynavi', '2026-10-18-detail-100-1-2-1.html'],
+      ['eval/pages/mynavi', '2026-10-18-list-2.html'],
     ];
     for (const [dir, name] of files) {
       mkdirSync(path.join(root, dir), { recursive: true });
@@ -92,6 +107,9 @@ describe('pageFiles and loadSite', () => {
       'eval/pages/paiza/2026-10-17-list-3.html',
     ]);
     expect(details.map((file) => path.relative(root, file))).toEqual(['tests/fixtures/paiza/2026-10-16-detail.html', 'eval/pages/paiza/2026-10-17-detail-5.html']);
+    const mynavi = pageFiles('mynavi', root);
+    expect(mynavi.lists.map((file) => path.relative(root, file))).toEqual(['eval/pages/mynavi/2026-10-18-list-2.html']);
+    expect(mynavi.details.map((file) => path.relative(root, file))).toEqual(['eval/pages/mynavi/2026-10-18-detail-100-1-2-1.html']);
   });
 
   it('loads a Green page saved in tests/fixtures', () => {
@@ -124,5 +142,6 @@ describe('pageFiles and loadSite', () => {
     expect(jobUrl('paiza', { jobId: '1', companyKey: '2' })).toBe('https://paiza.jp/career/job_offers/1');
     expect(jobUrl('green', { jobId: '1', companyKey: '2' })).toBe('https://www.green-japan.com/company/2/job/1');
     expect(jobUrl('doda', { jobId: '1', companyKey: 'x' })).toBe('https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__1/');
+    expect(jobUrl('mynavi', { jobId: '100-1-2-1', companyKey: '100' })).toBe('https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/');
   });
 });

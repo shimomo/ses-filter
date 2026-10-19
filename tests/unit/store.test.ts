@@ -13,6 +13,7 @@ import {
   loadRecords,
   loadSettings,
   mergeLists,
+  mergeSettings,
   saveBusinessHit,
   saveCardHit,
   saveJobResult,
@@ -34,15 +35,26 @@ describe('settings', () => {
     expect(await loadSettings()).toEqual({ ...DEFAULT_SETTINGS, mode: 'hide' });
   });
 
-  it('keeps paiza prefetch off until the user turns it on', async () => {
-    expect((await loadSettings()).paizaPrefetch).toBe(false);
-    await saveSettings({ paizaPrefetch: true });
-    expect((await loadSettings()).paizaPrefetch).toBe(true);
+  it('keeps prefetch off until the user turns it on', async () => {
+    expect((await loadSettings()).prefetch).toBe(false);
+    await saveSettings({ prefetch: true });
+    expect((await loadSettings()).prefetch).toBe(true);
+  });
+
+  it('reads an old paizaPrefetch setting as prefetch', () => {
+    expect(mergeSettings({ paizaPrefetch: true }).prefetch).toBe(true);
+    expect(mergeSettings({ paizaPrefetch: true, prefetch: false }).prefetch).toBe(false);
+    expect(mergeSettings({})).not.toHaveProperty('paizaPrefetch');
+    expect(mergeSettings({ paizaPrefetch: true })).not.toHaveProperty('paizaPrefetch');
   });
 
   it('fills sites missing from a partially saved object', async () => {
     await browser.storage.local.set({ settings: { mode: 'dim', sites: { green: false } } });
-    expect((await loadSettings()).sites).toEqual({ paiza: true, green: false, doda: true });
+    expect((await loadSettings()).sites).toEqual({ paiza: true, green: false, doda: true, mynavi: true });
+  });
+
+  it('turns mynavi on for settings saved before it existed', () => {
+    expect(mergeSettings({ sites: { paiza: false, green: true, doda: true } }).sites).toEqual({ paiza: false, green: true, doda: true, mynavi: true });
   });
 });
 

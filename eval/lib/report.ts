@@ -212,7 +212,8 @@ export function renderCardSheet(data: SiteData, labels: readonly LabelRecord[]):
       // paiza は決め手の欄を先に出し、残りは決め手になりうる欄だけを載せる。Green は詳細ページの本文をそのまま載せる
       const detailLines = parsed
         ? [
-            `- 詳細の開発内容タイプ: ${parsed.devContentsTypes ? parsed.devContentsTypes.join('、') : '（見出しなし）'}`,
+            // サイトの分類のないサイト（マイナビ転職。devContentsTypes が undefined）では、この行は出さない
+            ...(parsed.devContentsTypes === undefined ? [] : [`- 詳細の開発内容タイプ: ${parsed.devContentsTypes ? parsed.devContentsTypes.join('、') : '（見出しなし）'}`]),
             `- 詳細の雇用関係: ${parsed.employment ?? '（なし）'}`,
             `- 詳細の勤務地: ${parsed.fields.location ?? '（なし）'}`,
             ...(parsed.fields.business ? [`- 詳細の会社の説明: ${clip(parsed.fields.business, 1500)}`] : []),

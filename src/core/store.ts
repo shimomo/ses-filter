@@ -10,8 +10,8 @@ export const LISTS_KEY = 'userLists';
 export const DEFAULT_SETTINGS: Settings = {
   enabled: true,
   mode: 'collapse',
-  sites: { paiza: true, green: true, doda: true },
-  paizaPrefetch: false,
+  sites: { paiza: true, green: true, doda: true, mynavi: true },
+  prefetch: false,
   fetchIntervalMs: 1000,
 };
 
@@ -38,8 +38,10 @@ export function isCompanyRecord(value: unknown): value is CompanyRecord {
 }
 
 export function mergeSettings(raw: unknown): Settings {
-  const saved = (raw ?? {}) as Partial<Settings>;
-  return { ...DEFAULT_SETTINGS, ...saved, sites: { ...DEFAULT_SETTINGS.sites, ...saved.sites } };
+  // 古い版の `paizaPrefetch` は `prefetch` に読み替える（マイナビ転職の対応で設定を1つにした）
+  const { paizaPrefetch, ...saved } = (raw ?? {}) as Partial<Settings> & { paizaPrefetch?: boolean };
+  const prefetch = saved.prefetch ?? paizaPrefetch;
+  return { ...DEFAULT_SETTINGS, ...saved, ...(prefetch === undefined ? {} : { prefetch }), sites: { ...DEFAULT_SETTINGS.sites, ...saved.sites } };
 }
 
 export function mergeLists(raw: unknown): UserLists {

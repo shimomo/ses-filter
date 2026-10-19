@@ -49,13 +49,13 @@ export const test = base.extend<{ context: BrowserContext }>({
 
 export const expect = test.expect;
 
-/** ポップアップで「paiza の詳細ページを先読みする」をオンにし、保存されるまで待つ（先読みは既定でオフ） */
-export async function enablePaizaPrefetch(context: BrowserContext): Promise<void> {
+/** ポップアップで「詳細ページを先読みする」をオンにし、保存されるまで待つ（先読みは既定でオフ） */
+export async function enablePrefetch(context: BrowserContext): Promise<void> {
   const popup = await context.newPage();
   await popup.goto(`chrome-extension://${extensionId()}/popup.html`);
-  await popup.locator('#paizaPrefetch').check();
+  await popup.locator('#prefetch').check();
   await expect
-    .poll(() => popup.evaluate('chrome.storage.local.get("settings").then((saved) => saved.settings?.paizaPrefetch === true)'))
+    .poll(() => popup.evaluate('chrome.storage.local.get("settings").then((saved) => saved.settings?.prefetch === true)'))
     .toBe(true);
   await popup.close();
 }

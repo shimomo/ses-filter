@@ -389,7 +389,7 @@ export class Runtime {
   }
 
   private canPrefetch(card: CardData): boolean {
-    if (!this.adapter.detail || !this.settings?.paizaPrefetch || !this.queue || this.queue.stopped || !card.jobId) return false;
+    if (!this.adapter.detail || !this.settings?.prefetch || !this.queue || this.queue.stopped || !card.jobId) return false;
     return !this.givenUp.has(card.jobId) && !this.skipped.has(card.jobId);
   }
 
@@ -504,7 +504,7 @@ export class Runtime {
 
   private async learnFromThisPage(url: URL): Promise<void> {
     const detail = this.adapter.detail;
-    const jobId = /(\d+)\/?$/.exec(url.pathname)?.[1];
+    const jobId = detail?.jobIdOf(url);
     if (!detail || !jobId) return;
     try {
       await this.saveDetail(detail.parse(this.doc, jobId));

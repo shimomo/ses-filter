@@ -43,9 +43,9 @@ async function init(): Promise<void> {
     });
   }
 
-  const prefetch = byId<HTMLInputElement>('paizaPrefetch');
-  prefetch.checked = settings.paizaPrefetch;
-  prefetch.addEventListener('change', () => void saveSettings({ paizaPrefetch: prefetch.checked }));
+  const prefetch = byId<HTMLInputElement>('prefetch');
+  prefetch.checked = settings.prefetch;
+  prefetch.addEventListener('change', () => void saveSettings({ prefetch: prefetch.checked }));
 
   byId('clear-cache').addEventListener('click', async () => {
     const removed = await clearCache();

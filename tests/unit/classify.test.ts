@@ -98,8 +98,46 @@ describe('judgeFields ignores negations and look-alikes', () => {
     ['consumer reward service', f({ text: '還元率の高いポイントサービスを自社開発' })],
     ['cashless payment reward', f({ text: '最大還元率10%のキャッシュレス決済アプリ' })],
     ['points reward rate', f({ text: 'ポイントの還元率を上げる施策を企画' })],
+    // 段階3a（マイナビ転職）で見つかった書き方。文は架空のもの
+    ['candidate backgrounds at SES companies', f({ text: 'Webアプリの開発経験 SIer・SES企業での開発経験 【こんな方に向いています】' })],
+    ['unlike SES companies, far negation', f({ text: 'SES企業のように、案件ごとに勤務先や担当が変わる働き方ではありません。' })],
+    ['own office chosen by project', f({ location: '《東西いずれかの拠点に配属》 または、配属プロジェクトにより 当社別拠点（東京都）での勤務もございます。' })],
+    ['work style by project situation with の', f({ location: '【テレワーク実施中】 週の半分はプロジェクトの状況に応じて働き方を選べます。' })],
+    ['客先常駐原則なし', f({ text: '◎客先常駐原則なし◎賞与あり 自社製品を育てる開発エンジニア' })],
+    ['客先常駐無 followed by a symbol', f({ text: '自社内開発＊客先常駐無＊直接取引＊上流工程へ' })],
+    ['moving from 客先常駐 to in-house, with words between から and 転職', f({ text: '【客先常駐・SESから自社サービス＆自社内勤務への転職も歓迎】◆設計の経験' })],
+    ['客先常駐など…ありません', f({ text: '自社内開発なので、 客先常駐など職場が変わる働き方もありません。 同じチームで開発に向き合えます。' })],
+    ['quoted complaint about 客先常駐 to change', f({ text: '「下請けで上流に関われない」「客先常駐で孤独」「利用者の顔が見えない」といった現状を変えたい方に' })],
+    ['project units for chat', f({ location: '★慣れてきたらリモートワークも可能★ （週1～2回ほど出社） プロジェクト単位でチャットを作ったり、朝礼を行うなど' })],
   ])('%s', (_name, fields) => {
     expect(judgeFields(fields, 'card-rule')).toEqual({ level: 'none', reasons: [], companyLevel: false });
+  });
+
+  it('only flags a dispatch license number inside a list of licenses', () => {
+    const result = judgeFields(
+      f({ business: '【事業許可登録及び認定】 建設コンサルタント(建00第0000号) 測量業(第(0)00000号) 労働者派遣事業（派00-000000号） 一級建築士事務所(東京都第00000号)' }),
+      'card-rule',
+    );
+    expect(result.level).toBe('flag');
+    expect(result.reasons.map((reason) => reason.label)).toEqual(['派遣許可番号']);
+  });
+
+  it.each<[string, CardFields]>([
+    ['SES company describing itself', f({ text: 'SES企業として20年の実績があります' })],
+    ['like SES companies, no negation', f({ text: 'SES企業のように案件を選べます' })],
+    ['location by project', f({ location: '東京23区内（プロジェクトにより異なる）' })],
+    ['dispatch business without a license list', f({ business: '労働者派遣事業（派00-300000号）を中心に、エンジニアを派遣しています' })],
+    // 許可の語が前にあっても、一覧の形でなければ当てる（最終レビューの指摘）
+    ['dispatch business with a ministry permit', f({ business: '厚生労働大臣許可の労働者派遣事業を行っています' })],
+    ['dispatch business after another permit', f({ business: '有料職業紹介事業許可・労働者派遣事業（派00-300000）' })],
+    // 常駐先の説明に本社の住所が添えてある形は当てる（最終レビューの指摘）
+    ['location by project with head office address', f({ location: '東京都内（プロジェクトにより異なります（本社：新宿区））' })],
+    ['location by project, head office in parentheses', f({ location: 'プロジェクトによる（本社：東京都千代田区）' })],
+    ['project sites, not our offices', f({ location: '各プロジェクトの現場（当社の拠点ではありません）' })],
+    ['客先常駐 with a vague negation far away', f({ text: '客先常駐の案件が中心ですが、将来的には自社開発もありません…ではなく、あります' })],
+    ['客先常駐 then unrelated sentence', f({ text: '客先常駐。プロジェクトは常時8000件' })],
+  ])('still hides: %s', (_name, fields) => {
+    expect(judgeFields(fields, 'card-rule').level).toBe('hide');
   });
 });
 
@@ -172,6 +210,15 @@ describe('judgeDetail', () => {
 
   it('still hides strong detail signals when paiza says the work is in-house', () => {
     expect(judgeDetail(detail({ devContentsTypes: ['自社製品/自社サービス'], fields: { text: '還元率80%' } }))).toMatchObject({ level: 'hide', category: 'ses' });
+  });
+
+  it('judges a detail page of a site without its own classification by employment and rules', () => {
+    const base = { jobId: '1', fields: { text: '' } };
+    expect(judgeDetail({ ...base, employment: '派遣社員' })).toMatchObject({ level: 'hide', category: 'haken' });
+    expect(judgeDetail({ ...base, fields: { business: 'SES事業', text: '' } })).toMatchObject({ level: 'hide', category: 'ses' });
+    // サイトの分類で打ち消せないので、中くらいのルールだけなら要確認のまま
+    expect(judgeDetail({ ...base, fields: { title: '大規模案件のPM', text: '商流：プライム案件' } }).level).toBe('flag');
+    expect(judgeDetail({ ...base, fields: { text: '自社サービスの開発' } })).toEqual({ level: 'none', category: undefined, reasons: [] });
   });
 });
 

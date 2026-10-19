@@ -147,6 +147,20 @@ describe('renderCardSheet', () => {
     expect(sheet).not.toContain('土日祝');
     expect(sheet).toContain('- 詳細の会社の説明: ■事業領域：人材派遣、SES');
   });
+
+  it('leaves out the development type line for a site without a site classification', () => {
+    const run = makeRun('mynavi', [{ id: '100-1-2-1', label: 'unknown', level: 'none' }], ['100-1-2-1']);
+    run.data.details.set('100-1-2-1', {
+      jobId: '100-1-2-1',
+      employment: '正社員',
+      fields: { location: '東京都', business: 'SES事業', text: '勤務地: 東京都\n事業内容: SES事業\n仕事内容: 客先での開発' },
+    });
+    const sheet = renderCardSheet(run.data, run.labels);
+    expect(sheet).not.toContain('開発内容タイプ');
+    expect(sheet).toContain('- 詳細の雇用関係: 正社員');
+    expect(sheet).toContain('- 詳細の会社の説明: SES事業');
+    expect(sheet).toContain('仕事内容: 客先での開発');
+  });
 });
 
 describe('label definition', () => {

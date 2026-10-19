@@ -15,10 +15,12 @@
     "eval:review": "vitest run --config vitest.eval.config.ts eval/review.eval.ts",
     "eval:cards": "vitest run --config vitest.eval.config.ts eval/cards.eval.ts",
     "eval:pick-green": "vitest run --config vitest.eval.config.ts eval/pick-green.eval.ts",
+    "eval:pick-mynavi": "vitest run --config vitest.eval.config.ts eval/pick-mynavi.eval.ts",
     "eval:holdout": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/report.eval.ts",
     "eval:holdout:review": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/review.eval.ts",
     "eval:holdout:cards": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/cards.eval.ts",
-    "eval:holdout:pick-green": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/pick-green.eval.ts"
+    "eval:holdout:pick-green": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/pick-green.eval.ts",
+    "eval:holdout:pick-mynavi": "EVAL_SET=holdout vitest run --config vitest.eval.config.ts eval/pick-mynavi.eval.ts"
   },
   "devDependencies": {
     "@playwright/test": "1.62.1",

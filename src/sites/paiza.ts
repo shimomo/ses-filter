@@ -86,6 +86,7 @@ export const paizaAdapter: SiteAdapter = {
   },
   detail: {
     isDetailPage: (url) => url.hostname === HOST && DETAIL_PATH.test(url.pathname),
+    jobIdOf: (url) => /^\/career\/job_offers\/(\d+)/.exec(url.pathname)?.[1] ?? null,
     url: (card) => (card.jobId ? `https://paiza.jp/career/job_offers/${card.jobId}` : null),
     parse: parsePaizaDetail,
   },

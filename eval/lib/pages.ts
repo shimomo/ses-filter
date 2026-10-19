@@ -4,15 +4,17 @@ import { squash } from '../../src/core/normalize';
 import type { CardData, DetailData, Site, SiteAdapter } from '../../src/core/types';
 import { dodaAdapter } from '../../src/sites/doda';
 import { greenAdapter } from '../../src/sites/green';
+import { mynaviAdapter } from '../../src/sites/mynavi';
 import { paizaAdapter } from '../../src/sites/paiza';
 import { readLabels } from './labels';
 import { TUNING, type EvalSet } from './sets';
 import type { EvalCard, SiteData } from './types';
 
-export const SITES: readonly Site[] = ['paiza', 'green', 'doda'];
-export const ADAPTERS: Record<Site, SiteAdapter> = { paiza: paizaAdapter, green: greenAdapter, doda: dodaAdapter };
+export const SITES: readonly Site[] = ['paiza', 'green', 'doda', 'mynavi'];
+export const ADAPTERS: Record<Site, SiteAdapter> = { paiza: paizaAdapter, green: greenAdapter, doda: dodaAdapter, mynavi: mynaviAdapter };
 
-const DETAIL_FILE = /-detail(?:-(\d+))?\.html$/;
+/** 詳細ページのファイル名（…-detail-<求人ID>.html）。マイナビ転職の求人IDはハイフンを含む（<企業ID>-<n>-<m>-<k>） */
+const DETAIL_FILE = /-detail(?:-(\d+(?:-\d+)*))?\.html$/;
 
 /** 評価に使うページ。組のフォルダ（調整用は tests/fixtures/<site>/、eval/pages/<site>/ の順）を、それぞれファイル名の順に並べる（仕様 6.4） */
 export function pageFiles(site: Site, root: string = process.cwd(), set: EvalSet = TUNING): { lists: string[]; details: string[] } {
@@ -32,7 +34,7 @@ export function detailJobId(file: string, doc: Document): string | null {
   const fromName = DETAIL_FILE.exec(path.basename(file))?.[1];
   if (fromName) return fromName;
   const canonical = doc.querySelector('link[rel="canonical"]')?.getAttribute('href') ?? '';
-  return /\/job(?:_offers)?\/(\d+)/.exec(canonical)?.[1] ?? null;
+  return /\/job(?:_offers)?\/(\d+)/.exec(canonical)?.[1] ?? /\/jobinfo-(\d+(?:-\d+){3})\//.exec(canonical)?.[1] ?? null;
 }
 
 export function jobUrl(site: Site, card: { jobId: string; companyKey: string }): string {
@@ -43,6 +45,8 @@ export function jobUrl(site: Site, card: { jobId: string; companyKey: string }):
       return `https://www.green-japan.com/company/${card.companyKey}/job/${card.jobId}`;
     case 'doda':
       return `https://doda.jp/DodaFront/View/JobSearchDetail/j_jid__${card.jobId}/`;
+    case 'mynavi':
+      return `https://tenshoku.mynavi.jp/jobinfo-${card.jobId}/`;
   }
 }
 

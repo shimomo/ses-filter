@@ -1,5 +1,5 @@
-import { dodaCard, dodaListPage, greenCard, greenListPage, paizaDetailPage } from '../helpers/synthetic';
-import { enablePaizaPrefetch, expect, fixtureHtml, serve, test } from './fixtures';
+import { dodaCard, dodaListPage, greenCard, greenListPage, mynaviCard, mynaviDetailPage, mynaviListPage, paizaDetailPage } from '../helpers/synthetic';
+import { enablePrefetch, expect, fixtureHtml, serve, test } from './fixtures';
 
 const DETAIL_PATH = /^\/career\/job_offers\/\d+$/;
 const SES_DETAIL = paizaDetailPage({ jobId: '1', recruiterId: '1', company: 'テスト株式会社', title: 'テスト求人', devTypes: '受託開発（社外常駐）、B2B' });
@@ -7,7 +7,7 @@ const SES_DETAIL = paizaDetailPage({ jobId: '1', recruiterId: '1', company: 'テ
 test('paiza: cards whose detail page says 受託開発（社外常駐） get collapsed', async ({ context }) => {
   const list = fixtureHtml('paiza', 'list');
   test.skip(list === null, 'tests/fixtures/paiza/*-list.html がない');
-  await enablePaizaPrefetch(context);
+  await enablePrefetch(context);
   const detailRequests: string[] = [];
   await serve(
     context,
@@ -86,6 +86,69 @@ test('doda: the captured list page is recognized without warnings', async ({ con
   await page.goto('https://doda.jp/DodaFront/View/JobSearchList/j_k__/Java/');
   await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
   expect(await page.locator('[data-ses-filter]').count()).toBeGreaterThanOrEqual(10);
+  await page.waitForTimeout(6_000);
+  await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
+});
+
+const MYNAVI_LIST = 'https://tenshoku.mynavi.jp/engineer/list/o16/';
+const MYNAVI_DETAIL_PATH = /^\/jobinfo-\d+(?:-\d+){3}\/$/;
+
+test('mynavi: a card whose 勤務地 says プロジェクト先 is collapsed, and its bar can show it', async ({ context }) => {
+  await serve(context, [
+    {
+      match: (u) => u.hostname === 'tenshoku.mynavi.jp' && u.pathname === '/engineer/list/o16/',
+      html: mynaviListPage([
+        mynaviCard({ jobId: '100-1-2-1', company: '株式会社サンプル', title: 'Webエンジニア', location: '全国のプロジェクト先' }),
+        mynaviCard({ jobId: '200-1-1-1', company: '株式会社見本', title: '社内SE', location: '東京都渋谷区（本社）' }),
+      ]),
+    },
+  ]);
+  const page = await context.newPage();
+  await page.goto(MYNAVI_LIST);
+  const ses = page.locator('section.recruit.engineer').nth(0);
+  const clean = page.locator('section.recruit.engineer').nth(1);
+  await expect(ses).toHaveAttribute('data-ses-filter', 'collapsed');
+  await expect(ses.locator('ses-filter-bar .text')).toContainText('プロジェクト先');
+  await expect(clean).toHaveAttribute('data-ses-filter', 'plain');
+  await ses.locator('ses-filter-bar button[data-action="reveal"]').click();
+  await expect(ses).toHaveAttribute('data-ses-filter', 'revealed');
+});
+
+test('mynavi: with prefetch on, the detail page decides a card the list cannot, without adv1 in the URL', async ({ context }) => {
+  await enablePrefetch(context);
+  const detailRequests: string[] = [];
+  await serve(
+    context,
+    [
+      {
+        match: (u) => u.hostname === 'tenshoku.mynavi.jp' && u.pathname === '/engineer/list/o16/',
+        html: mynaviListPage([mynaviCard({ jobId: '100-1-2-1', company: '株式会社サンプル', title: 'Webエンジニア', location: '東京都' })]),
+      },
+      {
+        match: (u) => u.hostname === 'tenshoku.mynavi.jp' && MYNAVI_DETAIL_PATH.test(u.pathname),
+        html: mynaviDetailPage({ jobId: '100-1-2-1', companyId: '100', company: '株式会社サンプル', title: 'Webエンジニア', business: 'SES事業' }),
+      },
+    ],
+    (u) => {
+      if (u.pathname.startsWith('/jobinfo-')) detailRequests.push(u.pathname + u.search);
+    },
+  );
+  const page = await context.newPage();
+  await page.goto(MYNAVI_LIST);
+  const card = page.locator('section.recruit.engineer').first();
+  await expect(card).toHaveAttribute('data-ses-filter', 'collapsed', { timeout: 20_000 });
+  await expect(card.locator('ses-filter-bar .text')).toContainText('SES事業');
+  expect(detailRequests).toEqual(['/jobinfo-100-1-2-1/']);
+});
+
+test('mynavi: the captured list page is recognized without warnings', async ({ context }) => {
+  const list = fixtureHtml('mynavi', 'list');
+  test.skip(list === null, 'tests/fixtures/mynavi/*-list.html がない');
+  await serve(context, [{ match: (u) => u.hostname === 'tenshoku.mynavi.jp' && u.pathname === '/engineer/list/o16/', html: list ?? '' }]);
+  const page = await context.newPage();
+  await page.goto(MYNAVI_LIST);
+  await expect(page.locator('[data-ses-filter]').first()).toBeAttached();
+  expect(await page.locator('[data-ses-filter]').count()).toBe(50);
   await page.waitForTimeout(6_000);
   await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
 });

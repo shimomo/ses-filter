@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { judgeSite } from '../../../eval/lib/conditions';
+import { judgeSite, prefetchTargets } from '../../../eval/lib/conditions';
 import { buildSiteData } from '../../../eval/lib/pages';
 import { dodaCard, dodaListPage, greenCard, greenListPage, paizaCard, paizaDetailPage, paizaListPage, parseHtml } from '../../helpers/synthetic';
 
@@ -94,6 +94,31 @@ describe('judgeSite on paiza', () => {
   it('does not count saved detail pages of jobs without a card toward the company', () => {
     const lone = buildSiteData('paiza', [page('p.html', paizaListPage([cards[2] ?? '']))], [detail('1', '受託開発（社外常駐）'), detail('2', '受託開発（社外常駐）')]);
     expect(judgeSite(lone, 'usual').get('3')?.level).toBe('none');
+  });
+});
+
+describe('prefetchTargets', () => {
+  const detail = (jobId: string, devTypes: string) =>
+    page(`eval/pages/paiza/2026-10-17-detail-${jobId}.html`, paizaDetailPage({ jobId, recruiterId: jobId, company: `会社${jobId}`, title: 'SE', devTypes }));
+
+  it('lists the pending cards of each page in order, at most 30 per page, whether or not a detail page is saved', () => {
+    const ids = Array.from({ length: 35 }, (_, i) => String(100 + i));
+    const first = ids.map((id) => paizaCard({ jobId: id, recruiterId: id, company: `会社${id}`, title: 'SE' }));
+    const second = ['200', '201'].map((id) => paizaCard({ jobId: id, recruiterId: id, company: `会社${id}`, title: 'SE' }));
+    const data = buildSiteData('paiza', [page('p1.html', paizaListPage(first)), page('p2.html', paizaListPage(second))], [detail('100', '自社製品/自社サービス')]);
+    const targets = prefetchTargets(data).map((item) => item.card.jobId);
+    expect(targets).toEqual([...ids.slice(0, 30), '200', '201']);
+  });
+
+  it('skips cards that the card text or an earlier page already decided', () => {
+    const cards = [
+      paizaCard({ jobId: '1', recruiterId: '7', company: 'Y社', title: '還元率90%のSE' }),
+      paizaCard({ jobId: '2', recruiterId: '7', company: 'Y社', title: 'PG' }),
+      paizaCard({ jobId: '3', recruiterId: '8', company: 'Z社', title: 'インフラ' }),
+    ];
+    const data = buildSiteData('paiza', [page('p.html', paizaListPage(cards))], []);
+    // 1 はカードで隠れ、2 は同じ企業なので企業単位で隠れる。3 だけ判定中
+    expect(prefetchTargets(data).map((item) => item.card.jobId)).toEqual(['3']);
   });
 });
 

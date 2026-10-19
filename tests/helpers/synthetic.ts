@@ -121,3 +121,100 @@ export function dodaCard(o: DodaCardOptions): string {
 
 export const dodaListPage = (cards: string[]): string =>
   `<!doctype html><html lang="ja"><head><title>doda</title></head><body><main>${cards.join('\n')}</main></body></html>`;
+
+export type MynaviCardOptions = {
+  /** 求人ID（<企業ID>-<n>-<m>-<k>） */
+  jobId: string;
+  company: string;
+  title: string;
+  /** 社名の後ろに「 | 」でつなぐ企業のキャッチコピー */
+  catchCopy?: string;
+  location?: string;
+  work?: string;
+  point?: string;
+  /** サイトが付ける「関連キーワード」 */
+  keywords?: string[];
+};
+
+/** マイナビ転職の IT エンジニア職の検索結果のカード。2026-10-18 に確認した実ページ（/engineer/list/o16/）の構造を、判定に必要な部分だけ残して再現する */
+export function mynaviCard(o: MynaviCardOptions): string {
+  const href = `/jobinfo-${o.jobId}/?pageNum=1`;
+  const row = (label: string, value: string): string => `<tr><th>${label}</th> <td>${value}</td></tr>`;
+  const keywords =
+    o.keywords === undefined
+      ? ''
+      : `<div class="keyword"><p>関連キーワード</p> <ul class="keyword_list">${o.keywords.map((word) => `<li><a href="/engineer/list/kw${word}/" class="btn">${word}</a></li>`).join(' ')}</ul></div>`;
+  return `<section class="recruit engineer">
+  <div class="recruit_head"><div class="labelArea"></div> <h2 class="recruit_title"><p class="main_title">${o.catchCopy === undefined ? o.company : `${o.company} | ${o.catchCopy}`}</p> <p class="sub_title"><a href="${href}" target="_blank" class="link entry_click entry3">${o.title}</a></p></h2></div>
+  <div class="recruit_content"><ul class="label_list labelBlue"><li class="head_label">正社員</li> <li>転勤なし</li></ul>
+    <div class="recruit_main_img"><a href="${href}" class="entry_click entry4"><img alt="${o.title}"></a></div>
+    <div class="lyt_content lyt_content_l"><div class="lyt_auto"><table class="detaile_table"><tbody>
+      ${row('仕事内容', o.work ?? '自社サービスの開発')}
+      ${row('対象となる方', '実務経験1年以上')}
+      ${o.location === undefined ? '' : row('勤務地', o.location)}
+      ${row('初年度年収', '400万円～700万円')}
+      ${row('給与', '月給25万円～')}
+      ${o.point === undefined ? '' : row('ここがポイント', o.point)}
+    </tbody></table></div></div>
+    <div class="recruit_footer cf"><a href="${href}" class="arrow link entry_click entry3">求人詳細を見る</a><div class="footer_date"><p class="update">情報更新日：2026/10/13</p></div></div>
+  </div>
+  ${keywords}
+</section>`;
+}
+
+export const mynaviListPage = (cards: string[]): string =>
+  `<!doctype html><html lang="ja"><head><title>ITエンジニアの転職・求人・中途採用情報 | マイナビ転職エンジニア求人サーチ</title></head><body><div class="recruit_list">${cards.join('\n')}</div></body></html>`;
+
+export type MynaviDetailOptions = {
+  jobId: string;
+  companyId: string;
+  company: string;
+  title: string;
+  business?: string;
+  location?: string;
+  workHours?: string;
+  employment?: string;
+  /** 本文の区画（見出し、文章）。実ページの「仕事内容」「対象となる方」「会社・仕事の魅力」など */
+  body?: Array<[string, string]>;
+  /** ページ下部の「オススメ求人」に並ぶ他社の求人の見出し */
+  recommended?: string[];
+  /** 広告型（/adv1/）。事業内容と勤務時間の行がなく、<title> が「メッセージ情報」になる */
+  ad?: boolean;
+};
+
+/** マイナビ転職の求人の詳細ページ。2026-10-18 に確認した実ページ（通常型と広告型）の構造を、判定に必要な部分だけ残して再現する */
+export function mynaviDetailPage(o: MynaviDetailOptions): string {
+  const row = (label: string, value: string): string => `<tr><th class="jobOfferTable__head">${label}</th><td class="jobOfferTable__body"><div class="text">${value}</div></td></tr>`;
+  // 実ページでは、複数の見出し（h2.jobPointArea__title）が同じ div.leftBlock の直下に並ぶ
+  const section = (heading: string, content: string): string =>
+    `<h2 class="jobPointArea__title">${heading}</h2><div class="anchor__h2"></div><div class="text">${content}</div>`;
+  const offerRows = [
+    row('職種', 'ITエンジニア > システムエンジニア'),
+    o.location === undefined ? '' : row('勤務地', o.location),
+    o.employment === undefined ? '' : row('雇用形態', o.employment),
+    o.ad || o.workHours === undefined ? '' : row('勤務時間', o.workHours),
+    row('給与', '月給25万円～'),
+  ].join('');
+  const companyRows = [row('業種', 'ソフトウェア・情報処理'), o.ad || o.business === undefined ? '' : row('事業内容', o.business), row('設立', '2010年')].join('');
+  const body = (o.body ?? []).map(([heading, content]) => section(heading, content)).join('\n');
+  const recommended =
+    o.recommended === undefined
+      ? ''
+      : `<section class="topSection"><div class="historyRecommend__block"><div class="gridRecommend"><ul class="gridRecommend__list">${o.recommended
+          .map((title, i) => `<li class="gridRecommend__item"><a class="jobLink" href="/jobinfo-90${i}-1-1-1/"><h3 class="gridRecommendCard__title">${title}</h3></a></li>`)
+          .join('')}</ul></div></div></section>`;
+  return `<!doctype html><html lang="ja"><head>
+<title>${o.company}の${o.ad ? 'メッセージ' : '求人'}情報／${o.title} (1234567) | 転職・求人情報サイトのマイナビ転職</title>
+<link rel="canonical" href="https://tenshoku.mynavi.jp/jobinfo-${o.jobId}/${o.ad ? 'adv1/' : ''}">
+</head><body>
+<ul class="breadcrumb"><li><a href="//tenshoku.mynavi.jp/company/${o.companyId}/">${o.company}</a></li></ul>
+<h1>${o.title} ${o.company}</h1>
+<div class="jobPointArea"><div class="leftBlock"><h2 class="jobPointArea__title">この求人のポイント</h2><div class="jobPointArea__head top">ポイントの要約</div></div></div>
+<div class="jobPointArea lightBlue"><div class="leftBlock clearfix">
+${body}
+${section('募集要項', `<table class="jobOfferTable"><tbody>${offerRows}</tbody></table>`)}
+${section('会社情報', `<table class="jobOfferTable"><tbody>${companyRows}</tbody></table>`)}
+</div></div>
+${recommended}
+</body></html>`;
+}

@@ -22,10 +22,22 @@ describe('captured fixtures', () => {
     expect(loadFixture('doda', 'list').querySelectorAll('a[href*="JobSearchDetail/j_jid__"]').length).toBeGreaterThanOrEqual(10);
   });
 
+  it.skipIf(!hasFixture('mynavi', 'list'))('mynavi list has engineer job cards', () => {
+    expect(loadFixture('mynavi', 'list').querySelectorAll('section.recruit.engineer').length).toBe(50);
+  });
+
+  it.skipIf(!hasFixture('mynavi', 'detail'))('mynavi detail has the 事業内容 row and the body sections', () => {
+    const doc = loadFixture('mynavi', 'detail');
+    expect([...doc.querySelectorAll('th')].map((th) => th.textContent?.trim())).toContain('事業内容');
+    expect(doc.querySelectorAll('.jobPointArea h2.jobPointArea__title').length).toBeGreaterThanOrEqual(3);
+  });
+
   for (const [site, name] of [
     ['paiza', 'list'],
     ['paiza', 'detail'],
     ['green', 'search'],
+    ['mynavi', 'list'],
+    ['mynavi', 'detail'],
   ] as const) {
     it.skipIf(!hasFixture(site, name))(`${site} ${name} contains no script elements`, () => {
       expect(loadFixture(site, name).querySelectorAll('script')).toHaveLength(0);

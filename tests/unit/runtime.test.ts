@@ -6,12 +6,14 @@ import { DAY_MS, companyStoreKey, jobStoreKey, loadLists, saveSettings } from '.
 import { BAR_TAG, COUNTER_TAG, STATE_ATTR, STYLE_ID } from '../../src/core/ui';
 import { dodaAdapter } from '../../src/sites/doda';
 import { greenAdapter } from '../../src/sites/green';
+import { mynaviAdapter } from '../../src/sites/mynavi';
 import { paizaAdapter } from '../../src/sites/paiza';
-import { dodaCard, greenCard, paizaCard, paizaDetailPage, parseHtml } from '../helpers/synthetic';
+import { dodaCard, greenCard, mynaviCard, mynaviDetailPage, mynaviListPage, paizaCard, paizaDetailPage, parseHtml } from '../helpers/synthetic';
 
 const GREEN_URL = 'https://www.green-japan.com/search';
 const PAIZA_URL = 'https://paiza.jp/career/job_offers';
 const DODA_URL = 'https://doda.jp/DodaFront/View/JobSearchList/j_k__/Java/';
+const MYNAVI_URL = 'https://tenshoku.mynavi.jp/engineer/list/o16/';
 
 const SES_GREEN = {
   companyId: '101',
@@ -130,7 +132,7 @@ describe('Runtime on Green', () => {
   });
 
   it('leaves the page untouched when the site is turned off', async () => {
-    await saveSettings({ sites: { paiza: true, green: false, doda: true } });
+    await saveSettings({ sites: { paiza: true, green: false, doda: true, mynavi: true } });
     document.body.innerHTML = greenCard(SES_GREEN);
     await start({ adapter: greenAdapter });
     expect(stateOf(greenCardElement('1001'))).toBeNull();
@@ -290,9 +292,55 @@ describe('Runtime on doda', () => {
   });
 });
 
+describe('Runtime on mynavi', () => {
+  const mynaviCardElement = (): Element => only('section.recruit.engineer');
+
+  it('records the result of a detail page the user opens, and hides the card on the next list', async () => {
+    const doc = parseHtml(mynaviDetailPage({ jobId: '100-1-2-1', companyId: '100', company: '株式会社サンプル', title: 'Webエンジニア', business: 'SES事業' }));
+    const fetchFn = vi.fn();
+    runtime = new Runtime({ doc, adapter: mynaviAdapter, getUrl: () => 'https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/', fetchFn });
+    await runtime.start();
+    const jobKey = jobStoreKey('mynavi', '100-1-2-1');
+    expect((await browser.storage.local.get(jobKey))[jobKey]).toMatchObject({ level: 'hide', category: 'ses' });
+    expect((await browser.storage.local.get('company:mynavi:100'))['company:mynavi:100']).toMatchObject({ name: '株式会社サンプル', targetJobs: { '100-1-2-1': 'ses' } });
+    expect(fetchFn).not.toHaveBeenCalled();
+    runtime.stop();
+
+    currentUrl = MYNAVI_URL;
+    document.body.innerHTML = mynaviCard({ jobId: '100-1-2-1', company: '株式会社サンプル', title: 'Webエンジニア' });
+    await start({ adapter: mynaviAdapter });
+    expect(stateOf(mynaviCardElement())).toBe('collapsed');
+  });
+
+  it('does not record an ad-type detail page the user opens', async () => {
+    const doc = parseHtml(mynaviDetailPage({ jobId: '100-1-2-1', companyId: '100', company: '株式会社サンプル', title: 'Webエンジニア', ad: true }));
+    runtime = new Runtime({ doc, adapter: mynaviAdapter, getUrl: () => 'https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/adv1/', fetchFn: vi.fn() });
+    await runtime.start();
+    expect(Object.keys(await browser.storage.local.get(null)).filter((key) => key.startsWith('job:') || key.startsWith('company:'))).toEqual([]);
+    runtime.stop();
+
+    // 一覧ではカードの「還元率」で隠れたまま
+    currentUrl = MYNAVI_URL;
+    document.body.innerHTML = mynaviCard({ jobId: '100-1-2-1', company: '株式会社サンプル', title: 'Webエンジニア', point: '還元率最大90%' });
+    await start({ adapter: mynaviAdapter });
+    expect(stateOf(mynaviCardElement())).toBe('collapsed');
+  });
+
+  it('marks a card pending and collapses it once the fetched detail says 派遣社員', async () => {
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
+    currentUrl = MYNAVI_URL;
+    document.body.innerHTML = mynaviListPage([mynaviCard({ jobId: '100-1-2-1', company: '株式会社サンプル', title: 'Webエンジニア' })]).replace(/^[\s\S]*<body>|<\/body>[\s\S]*$/g, '');
+    const fetchFn = vi.fn(async () => respond(mynaviDetailPage({ jobId: '100-1-2-1', companyId: '100', company: '株式会社サンプル', title: 'Webエンジニア', employment: '派遣社員' })));
+    await start({ adapter: mynaviAdapter, fetchFn });
+    await vi.waitFor(() => expect(stateOf(mynaviCardElement())).toBe('collapsed'));
+    expect(fetchFn).toHaveBeenCalledWith('https://tenshoku.mynavi.jp/jobinfo-100-1-2-1/', expect.objectContaining({ credentials: 'same-origin' }));
+    expect(barTextOf(mynaviCardElement())).toContain('派遣');
+  });
+});
+
 describe('Runtime on paiza', () => {
   it('marks a card pending, then collapses it once the detail page says 受託開発（社外常駐）', async () => {
-    await saveSettings({ fetchIntervalMs: 0, paizaPrefetch: true });
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
     currentUrl = PAIZA_URL;
     document.body.innerHTML = paizaCard({ jobId: '5001', recruiterId: '501', company: 'A社', title: '基盤構築' });
     let release: (value: Response) => void = () => {};
@@ -314,7 +362,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('keeps the card visible and remembers "unknown" for a day when the detail has no development type', async () => {
-    await saveSettings({ fetchIntervalMs: 0, paizaPrefetch: true });
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
     currentUrl = PAIZA_URL;
     document.body.innerHTML = paizaCard({ jobId: '5', recruiterId: '6', company: 'B社', title: 'Webエンジニア' });
     const fetchFn = vi.fn(async () => respond('<html><head><title>ログイン | paiza</title></head><body>ログインしてください</body></html>'));
@@ -340,7 +388,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('stops fetching after repeated errors and leaves the cards visible', async () => {
-    await saveSettings({ fetchIntervalMs: 0, paizaPrefetch: true });
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
     currentUrl = PAIZA_URL;
     document.body.innerHTML =
       paizaCard({ jobId: '1', recruiterId: '10', company: 'C社', title: 'A' }) + paizaCard({ jobId: '2', recruiterId: '20', company: 'D社', title: 'B' });
@@ -352,7 +400,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('ignores a saved record with an unexpected shape', async () => {
-    await saveSettings({ paizaPrefetch: false });
+    await saveSettings({ prefetch: false });
     await browser.storage.local.set({ [jobStoreKey('paiza', '5001')]: { level: 'hide', category: 'ses', savedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } });
     currentUrl = PAIZA_URL;
     document.body.innerHTML =
@@ -366,7 +414,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('keeps showing the other cards when one card cannot be shown', async () => {
-    await saveSettings({ paizaPrefetch: false });
+    await saveSettings({ prefetch: false });
     await browser.storage.local.set({ [jobStoreKey('paiza', '5001')]: { level: 'hide', category: 'ses', reasons: [null], savedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } });
     currentUrl = PAIZA_URL;
     document.body.innerHTML =
@@ -383,7 +431,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('does not record a card hit for a job whose detail result is saved', async () => {
-    await saveSettings({ paizaPrefetch: false });
+    await saveSettings({ prefetch: false });
     await browser.storage.local.set({ [jobStoreKey('paiza', '2')]: { level: 'none', reasons: [], savedAt: 0, expiresAt: Number.MAX_SAFE_INTEGER } });
     currentUrl = PAIZA_URL;
     document.body.innerHTML =
@@ -396,7 +444,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('does not fetch the detail page of a card whose company another card already marks', async () => {
-    await saveSettings({ fetchIntervalMs: 0, paizaPrefetch: true });
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
     currentUrl = PAIZA_URL;
     const fetchFn = vi.fn(async () => respond(paizaDetailPage({ jobId: '3', recruiterId: '20', company: 'D社', title: 'Webエンジニア', devTypes: '自社製品/自社サービス' })));
     document.body.innerHTML =
@@ -409,7 +457,7 @@ describe('Runtime on paiza', () => {
   });
 
   it('does not fetch when prefetch is off', async () => {
-    await saveSettings({ paizaPrefetch: false });
+    await saveSettings({ prefetch: false });
     currentUrl = PAIZA_URL;
     document.body.innerHTML = paizaCard({ jobId: '1', recruiterId: '10', company: 'C社', title: 'A' });
     const fetchFn = vi.fn();

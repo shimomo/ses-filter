@@ -18,6 +18,8 @@ describe('paiza pages', () => {
   it('recognizes detail pages and builds their URL', () => {
     expect(paizaAdapter.detail?.isDetailPage(new URL('https://paiza.jp/career/job_offers/5002'))).toBe(true);
     expect(paizaAdapter.detail?.isDetailPage(new URL('https://paiza.jp/career/job_offers'))).toBe(false);
+    expect(paizaAdapter.detail?.jobIdOf(new URL('https://paiza.jp/career/job_offers/5002'))).toBe('5002');
+    expect(paizaAdapter.detail?.jobIdOf(new URL('https://paiza.jp/career/job_offers'))).toBeNull();
     expect(paizaAdapter.detail?.url({ jobId: '5002', companyKey: '1', companyName: '', fields: { text: '' } })).toBe(
       'https://paiza.jp/career/job_offers/5002',
     );

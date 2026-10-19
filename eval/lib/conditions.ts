@@ -48,15 +48,18 @@ function verdictFor(data: SiteData, card: EvalCard['card'], jobs: Map<string, Jo
 }
 
 /**
- * paiza の詳細ページのうち、拡張機能が先読みするものだけを、求人と企業の記録にする（src/core/runtime.ts の enqueueDetail と saveDetail と同じ手順）。
+ * 詳細ページのうち、拡張機能が先読みするものだけを、求人と企業の記録にする（src/core/runtime.ts の enqueueDetail と saveDetail と同じ手順）。
  * ページを順に開いたとして、各ページで判定中になるカード（カードのルールでも企業単位でも決まらないもの）を並び順に30件まで取る。
  * 拡張機能は最初の表示で判定中になったカードをすべて取得キューに入れるので、そのページの記録は取るカードを決めてから作る。
+ * 取ると決めたカード（保存した詳細ページの有無によらない）を返す
  */
-function recordDetails(data: SiteData, jobs: Map<string, JobRecord>, companies: Map<string, CompanyRecord>, now: number): void {
+function recordDetails(data: SiteData, jobs: Map<string, JobRecord>, companies: Map<string, CompanyRecord>, now: number): EvalCard[] {
+  const targets: EvalCard[] = [];
   for (const file of data.pages) {
     const fetched = data.cards
       .filter((item) => item.page === file && verdictFor(data, item.card, jobs, companies, true).level === 'pending')
       .slice(0, MAX_DETAILS_PER_PAGE);
+    targets.push(...fetched);
     for (const { card } of fetched) {
       // 保存した詳細ページがない求人は、先読みできなかったときと同じくカードの文言で判定する（仕様 6.2）
       const detail = data.details.get(card.jobId);
@@ -68,6 +71,16 @@ function recordDetails(data: SiteData, jobs: Map<string, JobRecord>, companies: 
       companies.set(companyKey, withJobResult(companies.get(companyKey) ?? emptyCompany(name, now), card.jobId, judgement.level, judgement.category, now));
     }
   }
+  return targets;
+}
+
+/** ③で拡張機能が先読みする求人（各ページで判定中になるカードを並び順に30件まで）。保存した詳細ページの有無は見ない。取るべき詳細ページを選ぶのに使う（マイナビ転職の仕様 7.1） */
+export function prefetchTargets(data: SiteData, now: number = EVAL_NOW): EvalCard[] {
+  const jobs = new Map<string, JobRecord>();
+  const companies = new Map<string, CompanyRecord>();
+  recordBusinessHits(data, companies, now);
+  recordCardHits(data, jobs, companies, now);
+  return recordDetails(data, jobs, companies, now);
 }
 
 /** 条件ごとに、すべてのカードを拡張機能と同じ優先順位（decide）で判定する。最後の判定は判定中にしない（記録はそろっている） */
