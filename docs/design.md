@@ -22,6 +22,7 @@
 | `src/core/ui.ts` | カードのバーと、画面右下の件数表示 |
 | `src/core/normalize.ts` | 社名と文字の正規化 |
 | `eval/` | 精度を測る仕組み |
+| `assets/icon.svg`、`icon-16.svg` | アイコンの元の絵（ふるいの上に求人票が残る。16px 用は網目と粒を省いたもの）。`pnpm icons` で `public/icon/` の PNG に書き出す |
 
 ## サイトごとの読み取り
 
