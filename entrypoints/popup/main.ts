@@ -1,4 +1,5 @@
 import { browser } from 'wxt/browser';
+import { PREFETCH_AVAILABLE } from '../../src/core/features';
 import { STATS_MESSAGE, type PageStats } from '../../src/core/messages';
 import { clearCache, loadSettings, saveSettings } from '../../src/core/store';
 import type { DisplayMode, Site } from '../../src/core/types';
@@ -21,6 +22,8 @@ async function fetchStats(): Promise<PageStats | null> {
 }
 
 async function init(): Promise<void> {
+  // 設定を読む前に消し、スイッチが一瞬見えないようにする
+  if (!PREFETCH_AVAILABLE) byId('prefetch').closest('label')?.remove();
   const settings = await loadSettings();
 
   const enabled = byId<HTMLInputElement>('enabled');
@@ -43,9 +46,11 @@ async function init(): Promise<void> {
     });
   }
 
-  const prefetch = byId<HTMLInputElement>('prefetch');
-  prefetch.checked = settings.prefetch;
-  prefetch.addEventListener('change', () => void saveSettings({ prefetch: prefetch.checked }));
+  if (PREFETCH_AVAILABLE) {
+    const prefetch = byId<HTMLInputElement>('prefetch');
+    prefetch.checked = settings.prefetch;
+    prefetch.addEventListener('change', () => void saveSettings({ prefetch: prefetch.checked }));
+  }
 
   byId('clear-cache').addEventListener('click', async () => {
     const removed = await clearCache();

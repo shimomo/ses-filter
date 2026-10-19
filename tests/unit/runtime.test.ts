@@ -38,9 +38,11 @@ let runtime: Runtime | null = null;
 const respond = (body: string, status = 200): Response =>
   ({ ok: status >= 200 && status < 300, status, text: async () => body }) as unknown as Response;
 
+/** 先読みの処理を確かめるため、既定では先読みを使える状態で起動する（PREFETCH_AVAILABLE とは別） */
 async function start(deps: Partial<RuntimeDeps> & Pick<RuntimeDeps, 'adapter'>): Promise<Runtime> {
   runtime = new Runtime({
     doc: document,
+    prefetchAvailable: true,
     getUrl: () => currentUrl,
     schedule: (callback) => {
       setTimeout(callback, 0);
@@ -453,6 +455,16 @@ describe('Runtime on paiza', () => {
     const [, other] = document.querySelectorAll('.s-job-offer-card');
     await vi.waitFor(() => expect(stateOf(other as Element)).toBe('collapsed'));
     expect(barTextOf(other as Element)).toContain('同じ企業の求人が対象');
+    expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it('does not fetch while prefetch is unavailable, even if a saved setting turns it on', async () => {
+    await saveSettings({ fetchIntervalMs: 0, prefetch: true });
+    currentUrl = PAIZA_URL;
+    document.body.innerHTML = paizaCard({ jobId: '1', recruiterId: '10', company: 'C社', title: 'A' });
+    const fetchFn = vi.fn();
+    await start({ adapter: paizaAdapter, fetchFn, prefetchAvailable: false });
+    expect(stateOf(only('.s-job-offer-card'))).toBe('plain');
     expect(fetchFn).not.toHaveBeenCalled();
   });
 

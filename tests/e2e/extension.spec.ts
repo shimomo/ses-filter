@@ -1,10 +1,12 @@
 import { dodaCard, dodaListPage, greenCard, greenListPage, mynaviCard, mynaviDetailPage, mynaviListPage, paizaDetailPage } from '../helpers/synthetic';
-import { enablePrefetch, expect, fixtureHtml, serve, test } from './fixtures';
+import { PREFETCH_AVAILABLE } from '../../src/core/features';
+import { enablePrefetch, expect, extensionId, fixtureHtml, serve, test } from './fixtures';
 
 const DETAIL_PATH = /^\/career\/job_offers\/\d+$/;
 const SES_DETAIL = paizaDetailPage({ jobId: '1', recruiterId: '1', company: 'テスト株式会社', title: 'テスト求人', devTypes: '受託開発（社外常駐）、B2B' });
 
 test('paiza: cards whose detail page says 受託開発（社外常駐） get collapsed', async ({ context }) => {
+  test.skip(!PREFETCH_AVAILABLE, '先読みは 1.0.0 まで止めている');
   const list = fixtureHtml('paiza', 'list');
   test.skip(list === null, 'tests/fixtures/paiza/*-list.html がない');
   await enablePrefetch(context);
@@ -115,6 +117,7 @@ test('mynavi: a card whose 勤務地 says プロジェクト先 is collapsed, an
 });
 
 test('mynavi: with prefetch on, the detail page decides a card the list cannot, without adv1 in the URL', async ({ context }) => {
+  test.skip(!PREFETCH_AVAILABLE, '先読みは 1.0.0 まで止めている');
   await enablePrefetch(context);
   const detailRequests: string[] = [];
   await serve(
@@ -151,4 +154,12 @@ test('mynavi: the captured list page is recognized without warnings', async ({ c
   expect(await page.locator('[data-ses-filter]').count()).toBe(50);
   await page.waitForTimeout(6_000);
   await expect(page.locator('ses-filter-counter .warning')).toHaveCount(0);
+});
+
+test('popup: the prefetch switch is hidden while prefetch is unavailable', async ({ context }) => {
+  test.skip(PREFETCH_AVAILABLE, '先読みを使えるときはスイッチを出す');
+  const popup = await context.newPage();
+  await popup.goto(`chrome-extension://${extensionId()}/popup.html`);
+  await expect(popup.locator('#enabled')).toBeChecked();
+  await expect(popup.locator('#prefetch')).toHaveCount(0);
 });

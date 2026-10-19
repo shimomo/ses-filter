@@ -2,6 +2,7 @@ import { browser } from 'wxt/browser';
 import type { ContentScriptContext } from 'wxt/utils/content-script-context';
 import { cardTargetCategory, judgeDetail, judgeFields } from './classify';
 import { decide, listKey } from './decide';
+import { PREFETCH_AVAILABLE } from './features';
 import { FetchQueue, type FetchQueueOptions, type FetchTask } from './fetchQueue';
 import { STATS_MESSAGE, type PageStats } from './messages';
 import {
@@ -40,6 +41,8 @@ export type RuntimeDeps = {
   setTimer?: (callback: () => void, ms: number) => void;
   healthCheckMs?: number;
   queueOptions?: Pick<FetchQueueOptions, 'retryDelayMs' | 'timeoutMs' | 'maxPerPage'>;
+  /** 先読みを使えるか。既定は PREFETCH_AVAILABLE（テストでは先読みの処理を確かめるために true を渡す） */
+  prefetchAvailable?: boolean;
 };
 
 type CardEntry = { data: CardData | null; verdict?: Verdict };
@@ -59,6 +62,7 @@ export class Runtime {
   private readonly setTimer: (callback: () => void, ms: number) => void;
   private readonly healthCheckMs: number;
   private readonly queueOptions: RuntimeDeps['queueOptions'];
+  private readonly prefetchAvailable: boolean;
 
   private settings: Settings | null = null;
   private lists: UserLists = mergeLists(undefined);
@@ -102,6 +106,7 @@ export class Runtime {
       });
     this.healthCheckMs = deps.healthCheckMs ?? 5000;
     this.queueOptions = deps.queueOptions;
+    this.prefetchAvailable = deps.prefetchAvailable ?? PREFETCH_AVAILABLE;
     this.url = this.getUrl();
   }
 
@@ -389,7 +394,7 @@ export class Runtime {
   }
 
   private canPrefetch(card: CardData): boolean {
-    if (!this.adapter.detail || !this.settings?.prefetch || !this.queue || this.queue.stopped || !card.jobId) return false;
+    if (!this.prefetchAvailable || !this.adapter.detail || !this.settings?.prefetch || !this.queue || this.queue.stopped || !card.jobId) return false;
     return !this.givenUp.has(card.jobId) && !this.skipped.has(card.jobId);
   }
 
